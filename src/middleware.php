@@ -11,9 +11,10 @@ $app->add(function ($request, $response, $next) {
     // en el futuro se quiere validar los accesos a las rutas por usuario desde aquí
     $route = $request->getUri()->getPath();//RUTA ACTUAL A LA QUE INTENTA ACCEDER
     $route = explode("/",$route)[0];
+    // $route = $request->getAttribute('route'); // NO FUNCIONO NUNCA
     $method = $request->getMethod();
 
-
+    // ----------------------------------------------------------
     // $respuesta = new Response();
     // $respuesta -> SetLogout();
     // $respuesta -> SetResponse (false, $route);
@@ -21,10 +22,24 @@ $app->add(function ($request, $response, $next) {
     // ->withHeader('Content-type', 'application/json')
     // ->withJson(($respuesta))
     // ; 
+    // ----------------------------------------------------------
     
     /*SECCIÓN DE TOKENS*/
     //!($route==="ususuw" && $method === "GET")
-    if(false){
+
+    // Para determinar si se exige el token en la solicitud
+    $supervisar = true;
+    switch($route){
+        case 'usuarios':
+            if(strrpos($request->getUri()->getPath(),'ingresar')>0 && $method=='GET'){
+                $supervisar = false;
+            }
+            break;
+        default:
+            $supervisar = true;
+    }
+
+    if($supervisar){
         $authorization = $request->getHeader("Authorization");
         // var_dump(count($authorization));
 

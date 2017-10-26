@@ -26,13 +26,11 @@ class UsuarioModel
         }
     }
 
-    public function GetAll()
+    public function Get($usuario='')
     {
 		try
 		{
-			$result = array();
-
-			$stm = $this->db->prepare("CALL pa_usuarios()");
+			$stm = $this->db->prepare("CALL pa_usuarios('$usuario')");
 			$stm->execute();
             
 			$this->response->setResponse(true);
@@ -47,4 +45,47 @@ class UsuarioModel
 		}
     }
 
+    public function Login($usuario,$clave)
+    {
+		try
+		{
+            if($usuario=='' || $clave==''){
+                $this->response->setResponse(false, "Debe indicar usuario y clave para ingresar al sistema");
+                return $this->response;
+            }
+            
+            // $this->response->setResponse(false, "CALL pa_ingresar('$usuario','$clave')");
+            // return $this->response;
+            
+            $stm = $this->db->prepare("CALL pa_ingresar('$usuario','$clave')");
+			$stm->execute();
+            
+            $this->response->setResponse(true);
+            
+            $result = array();
+            foreach ($stm->fetchAll() as $registro) {
+                
+                // ----------------- Sección de Token
+                $jwt = new Tokens();
+                $info = $registro;
+                $info['clave'] = $clave;
+                $token = $jwt->encode($info);
+                $this->response->SetToken($token);
+                // ----------------- Fin Sección de Token
+                
+                $registro['token'] = $token;
+                $result=$registro;
+                
+            }
+
+            $this->response->result = $result;
+            
+            return $this->response;
+		}
+		catch(Exception $e)
+		{
+			$this->response->setResponse(false, $e->getMessage());
+            return $this->response;
+		}
+    }
 }
